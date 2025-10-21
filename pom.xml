@@ -6,7 +6,7 @@
 
     <groupId>de.gematik.ti20.simsvc.server</groupId>
     <artifactId>popp-token-generator</artifactId>
-    <version>0.1.0</version>
+    <version>1.0.0</version>
 
     <name>Popp Token Generator</name>
     <description>Generator for Popp mock tokens</description>

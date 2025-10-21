@@ -7,8 +7,8 @@ server:
 
 logging:
   level:
-    root: INFO
-    org.springframework.boot.autoconfigure: OFF
+    '[root]': INFO
+    '[org.springframework.boot.autoconfigure]': OFF
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 

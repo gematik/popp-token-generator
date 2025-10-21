@@ -53,9 +53,23 @@ See the [LICENSE](./LICENSE) for the specific language governing permissions and
 
 To start the server, run mvn spring-boot:run in the project directory.
 Configuration parameters such as port, keystore paths and passwords can be set in
-src/main/resources/application.properties.
+src/main/resources/application.yaml.
 Once the server is running, you can access the Swagger UI at http://localhost:8080/swagger-ui/index.html to explore and
 test the API endpoints.
+
+### Docker Build
+
+Alternatively, use the provided Docker to build a Docker image:
+
+```
+docker build -f docker/Dockerfile -t popp-token-generator .
+```
+
+Then run the Docker container:
+
+```
+docker run -p 8080:8080 popp-token-generator
+```
 
 ## Examples
 

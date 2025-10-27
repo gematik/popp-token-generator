@@ -13,7 +13,6 @@ pactconfig-local.properties
 /.idea/
 /.vscode/
 jenkinsfiles
-Dockerfile
 README_INTERNAL.md
 .owaspignore
 

@@ -31,6 +31,9 @@ import org.springframework.stereotype.Component;
 @Setter
 public class PoppConfig {
 
+  /** Used for the iss JWT claim in the entity statement as well as host for the JWKs URL */
+  private String poppIssuerUrl;
+
   private SecurityConfig sec;
 
   @Getter

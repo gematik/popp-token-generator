@@ -46,7 +46,20 @@ class PoppConfigTest {
   void testPoppConfigInitialization() {
     // Assert
     assertNotNull(poppConfig);
+    assertNull(poppConfig.getPoppIssuerUrl());
     assertNull(poppConfig.getSec());
+  }
+
+  @Test
+  void testPoppConfigSetAndGetPoppIssuerUrl() {
+    // Arrange
+    String poppIssuerUrl = "https://popp.example.com";
+
+    // Act
+    poppConfig.setPoppIssuerUrl(poppIssuerUrl);
+
+    // Assert
+    assertEquals(poppIssuerUrl, poppConfig.getPoppIssuerUrl());
   }
 
   @Test
@@ -151,6 +164,7 @@ class PoppConfigTest {
   @Test
   void testCompleteConfigurationChain() {
     // Arrange
+    poppConfig.setPoppIssuerUrl("https://popp.example.com");
     storeConfig.setPath("/keystore/path");
     storeConfig.setPass("store-pass");
     keyConfig.setAlias("test-alias");
@@ -160,6 +174,7 @@ class PoppConfigTest {
     poppConfig.setSec(securityConfig);
 
     // Assert
+    assertEquals("https://popp.example.com", poppConfig.getPoppIssuerUrl());
     assertEquals("/keystore/path", poppConfig.getSec().getStore().getPath());
     assertEquals("store-pass", poppConfig.getSec().getStore().getPass());
     assertEquals("test-alias", poppConfig.getSec().getKey().getAlias());
@@ -208,7 +223,7 @@ class PoppConfigTest {
   @Test
   void testFieldsCount() {
     // Assert
-    assertEquals(1, PoppConfig.class.getDeclaredFields().length);
+    assertEquals(2, PoppConfig.class.getDeclaredFields().length); // poppIssuerUrl, sec
     assertEquals(2, PoppConfig.SecurityConfig.class.getDeclaredFields().length);
     assertEquals(2, PoppConfig.StoreConfig.class.getDeclaredFields().length);
     assertEquals(2, PoppConfig.KeyConfig.class.getDeclaredFields().length);
@@ -228,6 +243,7 @@ class PoppConfigTest {
     // Act & Assert
     assertDoesNotThrow(
         () -> {
+          poppConfig.setPoppIssuerUrl(null);
           poppConfig.setSec(null);
           securityConfig.setStore(null);
           securityConfig.setKey(null);
@@ -241,12 +257,14 @@ class PoppConfigTest {
   @Test
   void testSettersWithEmptyStrings() {
     // Act
+    poppConfig.setPoppIssuerUrl("");
     storeConfig.setPath("");
     storeConfig.setPass("");
     keyConfig.setAlias("");
     keyConfig.setPass("");
 
     // Assert
+    assertEquals("", poppConfig.getPoppIssuerUrl());
     assertEquals("", storeConfig.getPath());
     assertEquals("", storeConfig.getPass());
     assertEquals("", keyConfig.getAlias());
@@ -256,12 +274,15 @@ class PoppConfigTest {
   @Test
   void testMultipleSettersOnSameObject() {
     // Act
+    poppConfig.setPoppIssuerUrl("url1");
+    poppConfig.setPoppIssuerUrl("url2");
     storeConfig.setPath("path1");
     storeConfig.setPath("path2");
     storeConfig.setPass("pass1");
     storeConfig.setPass("pass2");
 
     // Assert
+    assertEquals("url2", poppConfig.getPoppIssuerUrl());
     assertEquals("path2", storeConfig.getPath());
     assertEquals("pass2", storeConfig.getPass());
   }

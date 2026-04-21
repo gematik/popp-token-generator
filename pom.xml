@@ -6,7 +6,7 @@
 
     <groupId>de.gematik.ti20.simsvc.server</groupId>
     <artifactId>popp-token-generator</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.11</version>
 
     <name>Popp Token Generator</name>
     <description>Generator for Popp mock tokens</description>
@@ -15,10 +15,10 @@
     <properties>
         <start-class>de.gematik.ti20.simsvc.server.Main</start-class>
 
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
 
-        <version.java>17</version.java>
+        <version.java>21</version.java>
         <version.maven.source>3.3.0</version.maven.source>
         <version.maven.compiler>3.12.1</version.maven.compiler>
         <version.maven.javadoc>3.6.3</version.maven.javadoc>

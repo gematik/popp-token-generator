@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.List;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
@@ -43,43 +44,29 @@ import org.jose4j.keys.resolvers.X509VerificationKeyResolver;
 public class PoppToken {
 
   // Header of the PoPP token
-  public static class TokenHeader {
+  @Getter
+  public static class Header {
 
     private String typ = "vnd.telematik.popp+jwt";
     private String alg = "ES256";
     private String kid;
     private List<String> x5c;
 
-    public TokenHeader(String typ, String alg, String kid, List<String> x5c) {
+    public Header(String typ, String alg, String kid, List<String> x5c) {
       this.typ = typ;
       this.alg = alg;
       this.kid = kid;
       this.x5c = x5c;
     }
 
-    public TokenHeader(String kid) {
+    public Header(String kid) {
       this.kid = kid;
-    }
-
-    public String getTyp() {
-      return typ;
-    }
-
-    public String getAlg() {
-      return alg;
-    }
-
-    public String getKid() {
-      return kid;
-    }
-
-    public List<String> getX5c() {
-      return x5c;
     }
   }
 
   // Claims of the PoPP token
-  public static class TokenClaims {
+  @Getter
+  public static class Claims {
 
     private String version = "1.0.0";
     private String iss = "https://popp.example.com";
@@ -92,7 +79,7 @@ public class PoppToken {
     private String actorId;
     private String actorProfessionOid;
 
-    public TokenClaims(
+    public Claims(
         final String version,
         final String iss,
         final long iat,
@@ -113,7 +100,7 @@ public class PoppToken {
       this.actorProfessionOid = actorProfessionOid;
     }
 
-    public TokenClaims(
+    public Claims(
         final String proofMethod,
         final long patientProofTime,
         final long iat,
@@ -129,49 +116,13 @@ public class PoppToken {
       this.actorId = actorId;
       this.actorProfessionOid = actorProfessionOid;
     }
-
-    public String getVersion() {
-      return version;
-    }
-
-    public String getIss() {
-      return iss;
-    }
-
-    public long getIat() {
-      return iat;
-    }
-
-    public String getProofMethod() {
-      return proofMethod;
-    }
-
-    public long getPatientProofTime() {
-      return patientProofTime;
-    }
-
-    public String getPatientId() {
-      return patientId;
-    }
-
-    public String getInsurerId() {
-      return insurerId;
-    }
-
-    public String getActorId() {
-      return actorId;
-    }
-
-    public String getActorProfessionOid() {
-      return actorProfessionOid;
-    }
   }
 
-  private TokenHeader header;
-  private TokenClaims claims;
+  private Header header;
+  private Claims claims;
 
   // Constructor for data-based token
-  public PoppToken(TokenHeader header, TokenClaims claims) {
+  public PoppToken(Header header, Claims claims) {
     this.header = header;
     this.claims = claims;
   }
@@ -180,11 +131,11 @@ public class PoppToken {
   private PoppToken() {}
 
   // Return header and claims
-  public TokenHeader getHeader() {
+  public Header getHeader() {
     return header;
   }
 
-  public TokenClaims getClaims() {
+  public Claims getClaims() {
     return claims;
   }
 
@@ -284,8 +235,8 @@ public class PoppToken {
 
     // Create TokenClaims
     log.debug("Creating TokenClaims...");
-    TokenClaims claims =
-        new TokenClaims(
+    Claims claims =
+        new Claims(
             jwtClaims.getStringClaimValue("version"),
             jwtClaims.getIssuer(),
             jwtClaims.getIssuedAt().getValueInMillis(),
@@ -298,8 +249,8 @@ public class PoppToken {
 
     // Create TokenHeader
     log.debug("Creating TokenHeader...");
-    TokenHeader header =
-        new TokenHeader(
+    Header header =
+        new Header(
             jws.getHeader("typ"),
             jws.getAlgorithmHeaderValue(),
             jws.getKeyIdHeaderValue(),

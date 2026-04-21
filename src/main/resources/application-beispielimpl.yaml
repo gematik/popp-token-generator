@@ -9,8 +9,8 @@ popp:
   poppIssuerUrl: "http://popp-token-generator"
   sec:
     store:
-      path: popp-token-Server-Sim-nist-komp61.p12
-      pass: "00"
+      path: popp-token-Server-nist-komp61.p12
+      pass: "gematik"
     key:
-      alias: alias
-      pass: "00"
+      alias: popp-token-Server-nist-komp61
+      pass: "gematik"

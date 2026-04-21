@@ -6,6 +6,7 @@ otel:
     disabled: true
 
 popp:
+  poppIssuerUrl: "http://localhost:8080"
   sec:
     store:
       path: popp-token-Server-Sim-nist-komp61.p12

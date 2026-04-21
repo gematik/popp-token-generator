@@ -26,38 +26,28 @@ import de.gematik.ti20.simsvc.server.model.SecurityParams;
 import de.gematik.ti20.simsvc.server.model.TokenParams;
 import java.io.InputStream;
 import java.security.KeyStore;
-import lombok.extern.slf4j.Slf4j;
+import org.jose4j.jwk.JsonWebKeySet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
 public class PoppTokenService {
 
-  private PoppConfig poppConfig;
-  private static KeyStore keyStore;
+  private static final Logger LOG = LoggerFactory.getLogger(PoppTokenService.class);
 
-  public PoppTokenService(final PoppConfig poppConfig) {
+  private final PoppConfig poppConfig;
+  private final KeyStore keyStore;
+  private final JsonWebKeySet jwk;
+
+  public PoppTokenService(
+      final PoppConfig poppConfig,
+      final @Qualifier("poppKeyStore") KeyStore keyStore,
+      final @Qualifier("publicJwk") JsonWebKeySet jwk) {
     this.poppConfig = poppConfig;
-    init();
-  }
-
-  private void init() {
-    try {
-      log.debug("Initializing KeyStore from path: {}", poppConfig.getSec().getStore().getPath());
-
-      keyStore = KeyStore.getInstance("PKCS12");
-      final String keyStoryPath = poppConfig.getSec().getStore().getPath();
-      final String keyStoryPass = poppConfig.getSec().getStore().getPass();
-
-      try (final InputStream fis = getClass().getClassLoader().getResourceAsStream(keyStoryPath)) {
-        keyStore.load(fis, keyStoryPass.toCharArray());
-      }
-
-      log.debug("KeyStore successfully loaded.");
-    } catch (final Exception e) {
-      log.error("Error initializing KeyStore: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to initialize KeyStore", e);
-    }
+    this.keyStore = keyStore;
+    this.jwk = jwk;
   }
 
   public String createToken(final TokenParams tokenParams) throws Exception {
@@ -66,15 +56,15 @@ public class PoppTokenService {
 
   public String createToken(final TokenParams tokenParams, final SecurityParams securityParams)
       throws Exception {
-    log.debug(
+    LOG.debug(
         "Creating POPP token for patientId: {}, insurerId: {}, actorId: {}, actorProfessionOid: {}",
         tokenParams.getPatientId(),
         tokenParams.getInsurerId(),
         tokenParams.getActorId(),
         tokenParams.getActorProfessionOid());
 
-    final PoppToken.TokenClaims claims =
-        new PoppToken.TokenClaims(
+    final PoppToken.Claims claims =
+        new PoppToken.Claims(
             tokenParams.getProofMethod(),
             tokenParams.getPatientProofTime(),
             tokenParams.getIat(),
@@ -83,23 +73,21 @@ public class PoppTokenService {
             tokenParams.getActorId(),
             tokenParams.getActorProfessionOid());
 
-    String result = null;
     if (securityParams == null) {
-      PoppConfig.KeyConfig keyConfig = poppConfig.getSec().getKey();
-      PoppToken.TokenHeader header = new PoppToken.TokenHeader(keyConfig.getAlias());
+      final PoppConfig.KeyConfig keyConfig = poppConfig.getSec().getKey();
+      final String kid = jwk.getJsonWebKeys().getFirst().getKeyId();
+
+      final PoppToken.Header header = new PoppToken.Header(kid);
       final PoppToken poppToken = new PoppToken(header, claims);
 
-      result = poppToken.toJwt(keyStore, keyConfig.getAlias(), keyConfig.getPass().toCharArray());
-    } else {
-      PoppToken.TokenHeader header = new PoppToken.TokenHeader(securityParams.getKeyAlias());
-      final PoppToken poppToken = new PoppToken(header, claims);
-      final KeyStore tmpKeyStore = buildKeyStore(securityParams);
-      result =
-          poppToken.toJwt(
-              tmpKeyStore, securityParams.getKeyAlias(), securityParams.getKeyPass().toCharArray());
+      return poppToken.toJwt(keyStore, keyConfig.getAlias(), keyConfig.getPass().toCharArray());
     }
 
-    return result;
+    PoppToken.Header header = new PoppToken.Header(securityParams.getKeyAlias());
+    final PoppToken poppToken = new PoppToken(header, claims);
+    final KeyStore tmpKeyStore = buildKeyStore(securityParams);
+    return poppToken.toJwt(
+        tmpKeyStore, securityParams.getKeyAlias(), securityParams.getKeyPass().toCharArray());
   }
 
   private KeyStore buildKeyStore(final SecurityParams securityParams) throws Exception {

@@ -62,7 +62,7 @@ test the API endpoints.
 Alternatively, use the provided Docker to build a Docker image:
 
 ```
-docker build -f docker/Dockerfile -t popp-token-generator .
+mvn clean install && docker build -f Dockerfile -t popp-token-generator .
 ```
 
 Then run the Docker container:

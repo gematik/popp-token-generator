@@ -52,11 +52,11 @@ class PoppTokenTest {
   @Test
   void testToJwt() throws Exception {
     // Create TokenHeader
-    PoppToken.TokenHeader header = new PoppToken.TokenHeader("key-id");
+    PoppToken.Header header = new PoppToken.Header("key-id");
 
     // Create TokenClaims
-    PoppToken.TokenClaims claims =
-        new PoppToken.TokenClaims(
+    PoppToken.Claims claims =
+        new PoppToken.Claims(
             "ehc-practitioner-user-x509",
             1753877030L,
             1753877020L,
@@ -79,11 +79,11 @@ class PoppTokenTest {
   @Test
   void testFromJwt() throws Exception {
     // Create TokenHeader
-    PoppToken.TokenHeader header = new PoppToken.TokenHeader("key-id");
+    PoppToken.Header header = new PoppToken.Header("key-id");
 
     // Create TokenClaims
-    PoppToken.TokenClaims claims =
-        new PoppToken.TokenClaims(
+    PoppToken.Claims claims =
+        new PoppToken.Claims(
             "ehc-practitioner-user-x509",
             1753877030L,
             1753877020L,

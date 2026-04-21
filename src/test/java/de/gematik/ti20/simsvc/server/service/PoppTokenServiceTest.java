@@ -22,16 +22,29 @@ package de.gematik.ti20.simsvc.server.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.gematik.ti20.simsvc.server.config.JwkConfiguration;
+import de.gematik.ti20.simsvc.server.config.KeyStoreConfiguration;
 import de.gematik.ti20.simsvc.server.config.PoppConfig;
 import de.gematik.ti20.simsvc.server.model.SecurityParams;
 import de.gematik.ti20.simsvc.server.model.TokenParams;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import java.util.Base64;
+import java.util.Map;
+import org.jose4j.jwk.JsonWebKeySet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class PoppTokenServiceTest {
 
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
   private PoppConfig poppConfig;
+  private KeyStore keyStore;
+  private JsonWebKeySet publicJwk;
 
   @BeforeEach
   void setUp() {
@@ -49,22 +62,28 @@ class PoppTokenServiceTest {
 
     poppConfig = new PoppConfig();
     poppConfig.setSec(secConfig);
+
+    keyStore = new KeyStoreConfiguration().poppKeyStore(poppConfig);
+    publicJwk = new JwkConfiguration().jwkSource(keyStore);
   }
 
   @Test
   void testCreateTokenReturnsJwt() throws Exception {
-    PoppTokenService service = new PoppTokenService(poppConfig);
+    PoppTokenService service = new PoppTokenService(poppConfig, keyStore, publicJwk);
     final TokenParams tokenParams = new TokenParams("", "1000", "999", "pid", "iid", "aid", "oid");
 
     final String jwt = service.createToken(tokenParams, null);
 
     assertNotNull(jwt);
     assertTrue(jwt.split("\\.").length == 3);
+    assertNotNull(parseJwtHeader(jwt));
+
+    assertEquals("YpcZd9WfcJ2hKWbLVQJuvIk23RtDvPzVOtAmG77D-64", parseJwtHeader(jwt).get("kid"));
   }
 
   @Test
   void testCreateTokenWithSecurityParams() throws Exception {
-    PoppTokenService service = new PoppTokenService(poppConfig);
+    PoppTokenService service = new PoppTokenService(poppConfig, keyStore, publicJwk);
 
     final InputStream fis =
         PoppTokenServiceTest.class.getClassLoader().getResourceAsStream("alt_keystore.p12");
@@ -78,5 +97,12 @@ class PoppTokenServiceTest {
 
     assertNotNull(jwt);
     assertTrue(jwt.split("\\.").length == 3);
+  }
+
+  private Map<String, Object> parseJwtHeader(final String jwt) throws Exception {
+    final String[] segments = jwt.split("\\.");
+    final byte[] decodedHeader = Base64.getUrlDecoder().decode(segments[0]);
+    final String headerJson = new String(decodedHeader, StandardCharsets.UTF_8);
+    return OBJECT_MAPPER.readValue(headerJson, new TypeReference<Map<String, Object>>() {});
   }
 }

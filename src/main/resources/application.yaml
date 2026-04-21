@@ -13,6 +13,7 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 popp:
+  poppIssuerUrl: ${POPP_ISSUER_URL:NOT_SET_BUT_REQUIRED}
   sec:
     store:
       path: ${POPP_SEC_STORE_PATH:NOT_SET_BUT_REQUIRED}

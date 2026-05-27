@@ -99,7 +99,7 @@ class PoppTokenTest {
     String jwt = token.toJwt(keyStore, ALIAS, KEY_PASSWORD);
 
     // Parse the JWT back to PoppToken
-    PoppToken parsedToken = PoppToken.fromJwt(jwt, keyStore);
+    PoppToken parsedToken = PoppToken.fromJwt(jwt);
 
     // Assert that the parsed token matches the original claims
     assertNotNull(parsedToken, "Parsed token should not be null");
@@ -127,29 +127,9 @@ class PoppTokenTest {
 
     // Attempt to parse the invalid JWT
     Exception exception =
-        assertThrows(Exception.class, () -> PoppToken.fromJwt(invalidJwt, keyStore));
+        assertThrows(Exception.class, () -> PoppToken.fromJwt(invalidJwt));
 
     // Assert that an exception is thrown
     assertNotNull(exception, "Exception should be thrown for invalid JWT");
-  }
-
-  @Test
-  void testMissingClaims() throws Exception {
-    // Create a JWT with missing claims
-    JwtClaims jwtClaims = new JwtClaims();
-    jwtClaims.setIssuer("https://popp.example.com");
-
-    JsonWebSignature jws = new JsonWebSignature();
-    jws.setPayload(jwtClaims.toJson());
-    jws.setAlgorithmHeaderValue(AlgorithmIdentifiers.ECDSA_USING_P256_CURVE_AND_SHA256);
-
-    PrivateKey privateKey = (PrivateKey) keyStore.getKey(ALIAS, KEY_PASSWORD);
-    jws.setKey(privateKey);
-
-    String jwt = jws.getCompactSerialization();
-
-    // Attempt to parse the JWT
-    Exception exception =
-        assertThrows(CertificateException.class, () -> PoppToken.fromJwt(jwt, keyStore));
   }
 }

@@ -9,6 +9,10 @@
   </ol>
 </details>
 
+## Release 1.0.12
+
+- Remove x5c from Popp token header
+
 ## Release 1.0.0
 
 - First release with major version number greater than zero.

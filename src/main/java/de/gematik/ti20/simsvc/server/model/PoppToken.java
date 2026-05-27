@@ -50,13 +50,11 @@ public class PoppToken {
     private String typ = "vnd.telematik.popp+jwt";
     private String alg = "ES256";
     private String kid;
-    private List<String> x5c;
 
-    public Header(String typ, String alg, String kid, List<String> x5c) {
+    public Header(String typ, String alg, String kid) {
       this.typ = typ;
       this.alg = alg;
       this.kid = kid;
-      this.x5c = x5c;
     }
 
     public Header(String kid) {
@@ -147,18 +145,6 @@ public class PoppToken {
     log.debug("Extracting private key and certificate from the KeyStore...");
 
     final PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, keyPassword);
-    final X509Certificate certificate = (X509Certificate) keyStore.getCertificate(alias);
-
-    // Convert certificate to Base64-encoded string for the x5c header
-    String x5c;
-    try {
-      x5c = Base64.getEncoder().encodeToString(certificate.getEncoded());
-      log.debug("Certificate successfully encoded for x5c header.");
-    } catch (CertificateEncodingException e) {
-      log.error("Error encoding the certificate for x5c header.", e);
-      throw new CertificateException(
-          "Error encoding the certificate from the KeyStore for the x5c header", e);
-    }
 
     // Define JWT claims
     log.debug("Defining JWT claims...");
@@ -182,7 +168,6 @@ public class PoppToken {
     jws.setAlgorithmHeaderValue(AlgorithmIdentifiers.ECDSA_USING_P256_CURVE_AND_SHA256);
     jws.setHeader("typ", header.getTyp());
     jws.setHeader("kid", header.getKid());
-    jws.setHeader("x5c", List.of(x5c));
 
     String jwt = jws.getCompactSerialization();
     log.debug("JWT generation completed successfully.");
@@ -190,34 +175,18 @@ public class PoppToken {
   }
 
   // Parse JWT and create a PoppToken object
-  public static PoppToken fromJwt(String jwt, KeyStore keyStore) throws Exception {
+  public static PoppToken fromJwt(String jwt) throws Exception {
     log.debug("Starting JWT parsing and validation...");
 
     // Extract the certificate chain from the JWT
     JsonWebSignature jws = new JsonWebSignature();
     jws.setCompactSerialization(jwt);
 
-    // Extract the certificate chain from the x5c header
-    log.debug("Extracting certificate chain from the x5c header...");
-    List<X509Certificate> certs = jws.getCertificateChainHeaderValue();
-    if (certs == null || certs.isEmpty()) {
-      log.error("No certificates found in the JWT x5c header.");
-      throw new CertificateException("No certificates found in the JWT x5c header.");
-    }
-
-    // Validate the certificate chain against the KeyStore
-    log.debug("Validating certificate chain against the KeyStore...");
-    validateCertificateChain(certs, keyStore);
-
-    // Configure the resolver with the extracted certificates from x5c
-    log.debug("Configuring X509VerificationKeyResolver...");
-    X509VerificationKeyResolver resolver =
-        new X509VerificationKeyResolver(certs.toArray(new X509Certificate[0]));
-    resolver.setTryAllOnNoThumbHeader(true);
-
     // Create a JwtConsumer with the resolver
     log.debug("Creating JwtConsumer...");
-    JwtConsumer jwtConsumer = new JwtConsumerBuilder().setVerificationKeyResolver(resolver).build();
+    JwtConsumer jwtConsumer = new JwtConsumerBuilder().setDisableRequireSignature()
+        .setSkipSignatureVerification()
+        .build();
 
     // Verify the JWT and extract the claims
     JwtClaims jwtClaims = jwtConsumer.processToClaims(jwt);
@@ -253,20 +222,7 @@ public class PoppToken {
         new Header(
             jws.getHeader("typ"),
             jws.getAlgorithmHeaderValue(),
-            jws.getKeyIdHeaderValue(),
-            certs.stream()
-                .map(
-                    cert -> {
-                      try {
-                        return Base64.getEncoder().encodeToString(cert.getEncoded());
-                      } catch (CertificateEncodingException e) {
-                        log.error(
-                            "Error encoding a certificate from the JWT certificate chain.", e);
-                        throw new RuntimeException(
-                            "Error encoding a certificate from the JWT certificate chain", e);
-                      }
-                    })
-                .toList());
+            jws.getKeyIdHeaderValue());
 
     log.debug("JWT parsing and validation completed successfully.");
     return new PoppToken(header, claims);
